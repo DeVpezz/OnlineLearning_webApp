@@ -10,7 +10,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  useLoginUserMutation,
+  useRegisterUserMutation,
+} from "@/features/api/authApi";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const Login = () => {
   const [signupInput, setSignupInput] = useState({
@@ -19,6 +25,49 @@ const Login = () => {
     password: "",
   });
   const [loginInput, setLoginInput] = useState({ email: "", password: "" });
+
+  const [
+    registerUser,
+    {
+      data: registerData,
+      error: registerError,
+      isLoading: registerIsLoading,
+      isSuccess: registerIsSuccess,
+    },
+  ] = useRegisterUserMutation();
+  const [
+    loginUser,
+    {
+      data: loginData,
+      error: loginError,
+      isLoading: loginIsLoading,
+      isSuccess: loginIsSuccess,
+    },
+  ] = useLoginUserMutation();
+
+  useEffect(() => {
+    if(registerIsSuccess && registerData){
+      toast.success(registerData.message || "Signup successful.")
+    }
+    if(registerError){
+      toast.error(registerError.data.message || "Signup Failed");
+    }
+    if(loginIsSuccess && loginData){
+      toast.success(loginData.message || "Login successful.");
+   
+    }
+    if(loginError){ 
+      toast.error(loginError.data.message || "login Failed");
+    }
+  }, [
+    loginIsLoading,
+    registerIsLoading,
+    loginData,
+    registerData,
+    loginError,
+    registerError,
+  ]);
+
 
   const changeInputHandler = (e, type) => {
     const { name, value } = e.target;
@@ -30,7 +79,8 @@ const Login = () => {
   };
   const handleRegistration = async (type) => {
     const inputData = type === "signup" ? signupInput : loginInput;
-    console.log(inputData);
+    const action = type === "signup" ? registerUser : loginUser;
+    await action(inputData);
   };
   return (
     <div className="w-screen h-screen bg-gradient-to-br from-neutral-100 to-neutral-200">
@@ -107,9 +157,19 @@ const Login = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="bg-neutral-50 border-t border-neutral-100 p-6">
-                  <Button  onClick={() => handleRegistration("signup")} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-300 py-3 text-base">
-                    Sign Up
-                  </Button>
+                <Button
+                disabled={registerIsLoading}
+                onClick={() => handleRegistration("signup")}
+              >
+                {registerIsLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please
+                    wait
+                  </>
+                ) : (
+                  "Signup"
+                )}
+              </Button>
                 </CardFooter>
               </Card>
             </TabsContent>
@@ -163,8 +223,18 @@ const Login = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="bg-neutral-50 border-t border-neutral-100 p-6">
-                  <Button  onClick={() => handleRegistration("login")} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-300 py-3 text-base">
-                    Log In
+                  <Button
+                    disabled={loginIsLoading}
+                    onClick={() => handleRegistration("login")}
+                  >
+                    {loginIsLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please
+                        wait
+                      </>
+                    ) : (
+                      "Login"
+                    )}
                   </Button>
                 </CardFooter>
               </Card>
